@@ -8,7 +8,9 @@ network.
 import os
 import sys
 import logging
+import time
 import cv2
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -16,7 +18,9 @@ import torch.backends.cudnn as cudnn
 from torch.autograd import Variable
 import torchvision.transforms as transforms
 
-from high_res_stereo_model import HSMNet_model
+from sksurgerytorch.models.high_res_stereo_model import disparityregression
+
+from sksurgerytorch.models.high_res_stereo_model import HSMNet_model
 
 LOGGER = logging.getLogger(__name__)
 
@@ -41,12 +45,14 @@ class HSMNet:
 
     def __init__(self, max_disp:int=255, entropy_threshold:float=-1, level:int=1, scale_factor:float=0.5, weights=None):
 
-        self.max_disp = maxdisp
-        self.test_res = testres
+        self.max_disp = max_disp
+        self.scale_factor = scale_factor
         self.entropy_threshold = entropy_threshold
         self.level = level
 
-        self.model = HSMNet_model(maxdisp, entropy_threshold, level)
+        self.model = HSMNet_model(max_disp, entropy_threshold, level)
+        self.model = nn.DataParallel(self.model, device_ids=[0])
+        self.model.cuda()
         self.model.eval()
 
         self.pred_disp = None
@@ -56,10 +62,10 @@ class HSMNet:
             LOGGER.info("Loading weights from %s", weights)
             pretrained_dict = torch.load(weights)
             pretrained_dict['state_dict'] =  {k:v for k,v in pretrained_dict['state_dict'].items() if 'disp' not in k}
-            model.load_state_dict(pretrained_dict['state_dict'],strict=False)
+            self.model.load_state_dict(pretrained_dict['state_dict'],strict=False)
             LOGGER.info("Loaded weights")
 
-        print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
+        print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in self.model.parameters()])))
 
 
 
@@ -75,6 +81,10 @@ class HSMNet:
         :return: Predicted disparity, grayscale
         :rtype: np.ndarray
         """
+
+        __imagenet_stats = {'mean': [0.485, 0.456, 0.406],
+                        'std': [0.229, 0.224, 0.225]}
+
         t_list = [
         toTensorLegacy(),
         transforms.Normalize(**__imagenet_stats),
@@ -83,7 +93,7 @@ class HSMNet:
         processed = transforms.Compose(t_list)
 
         #TODO: Move this to init or model bit?
-        disp_scaled = int(self.max_disp * self.test_res // 64 * 64)
+        disp_scaled = int(self.max_disp * self.scale_factor // 64 * 64)
         self.model.module.maxdisp = disp_scaled 
         if self.model.module.maxdisp == 64: self.model.module.maxdisp=128
         self.model.module.disp_reg8 =  disparityregression(self.model.module.maxdisp,16).cuda()
@@ -93,9 +103,10 @@ class HSMNet:
 
         LOGGER.info("Model.module.maxdisp %s", self.model.module.maxdisp)
 
+        orig_img_size = left_image.shape[:2]
         # resize
-        imgL_o = cv2.resize(left_image,None,fx=self.test_res,fy=self.test_res,interpolation=cv2.INTER_CUBIC)
-        imgR_o = cv2.resize(right_image,None,fx=self.test_res,fy=self.test_res,interpolation=cv2.INTER_CUBIC)
+        imgL_o = cv2.resize(left_image,None,fx=self.scale_factor,fy=self.scale_factor,interpolation=cv2.INTER_CUBIC)
+        imgR_o = cv2.resize(right_image,None,fx=self.scale_factor,fy=self.scale_factor,interpolation=cv2.INTER_CUBIC)
         imgL = processed(imgL_o).numpy()
         imgR = processed(imgR_o).numpy()
 
@@ -113,10 +124,13 @@ class HSMNet:
         imgL = np.lib.pad(imgL,((0,0),(0,0),(top_pad,0),(0,left_pad)),mode='constant',constant_values=0)
         imgR = np.lib.pad(imgR,((0,0),(0,0),(top_pad,0),(0,left_pad)),mode='constant',constant_values=0)
 
+        imgL = Variable(torch.FloatTensor(imgL).cuda())
+        imgR = Variable(torch.FloatTensor(imgR).cuda())
+
         with torch.no_grad():
             torch.cuda.synchronize()
             start_time = time.time()
-            self.pred_disp, self.entropy = model(imgL,imgR)
+            self.pred_disp, self.entropy = self.model(imgL,imgR)
             torch.cuda.synchronize()
             ttime = (time.time() - start_time); print('time = %.2f' % (ttime*1000) )
 
@@ -127,14 +141,8 @@ class HSMNet:
         self.entropy = self.entropy[top_pad:,:self.pred_disp.shape[1]-left_pad].cpu().numpy()
         self.pred_disp = self.pred_disp[top_pad:,:self.pred_disp.shape[1]-left_pad]
 
-        # save predictions
-        idxname = test_left_img[inx].split('/')[-2]
-        if not os.path.exists('%s/%s'%(args.outdir,idxname)):
-            os.makedirs('%s/%s'%(args.outdir,idxname))
-        idxname = '%s/disp0HSM'%(idxname)
-
         # resize to highres
-        self.pred_disp = cv2.resize(self.pred_disp/args.testres,(imgsize[1],imgsize[0]),interpolation=cv2.INTER_LINEAR)
+        self.pred_disp = cv2.resize(self.pred_disp/self.scale_factor,(orig_img_size[1],orig_img_size[0]),interpolation=cv2.INTER_LINEAR)
 
         # clip while keep inf
         invalid = np.logical_or(self.pred_disp == np.inf,self.pred_disp!=self.pred_disp)
@@ -143,3 +151,45 @@ class HSMNet:
         torch.cuda.empty_cache()
 
         return self.pred_disp, self.entropy
+
+class toTensorLegacy(object):
+    def __call__(self, pic):
+        """
+        Args:
+            pic (PIL or numpy.ndarray): Image to be converted to tensor
+
+        Returns:
+            Tensor: Converted image.
+        """
+        if isinstance( pic, np.ndarray ):
+                # This is what TorchVision 0.2.0 returns for transforms.toTensor() for np.ndarray
+        	return torch.from_numpy( pic.transpose((2, 0, 1))).float().div(255)
+        else:
+                return transforms.to_tensor( pic )
+    def __repr__(self):
+        return self.__class__.__name__ + '()'
+
+
+def run_hsmnet_model(max_disp,
+                    entropy_threshold,
+                    level,
+                    scale_factor,
+                    weights,
+                    left_image,
+                    right_image,
+                    output_file
+                    ):
+
+    network = HSMNet(max_disp=max_disp,
+                    entropy_threshold=entropy_threshold,
+                    level=level,
+                    scale_factor=scale_factor,
+                    weights=weights)
+
+    left = cv2.imread(left_image)
+    right = cv2.imread(right_image)
+
+
+    disp, entropy = network.predict(left, right)
+
+    cv2.imwrite(output_file, disp)

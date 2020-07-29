@@ -5,14 +5,11 @@ import torch.utils.data
 from torch.autograd import Variable
 import torch.nn.functional as F
 import math
-from .submodule import *
-import pdb
-from models.utils import unet
-from matplotlib import pyplot as plt
+import numpy as np
 
 class HSMNet_model(nn.Module):
     def __init__(self, maxdisp,clean,level=1):
-        super(HSMNet, self).__init__()
+        super(HSMNet_model, self).__init__()
         self.maxdisp = maxdisp
         self.clean = clean
         self.feature_extraction = unet()
