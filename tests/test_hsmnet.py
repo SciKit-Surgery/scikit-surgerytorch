@@ -5,8 +5,9 @@ import numpy as np
 from sksurgerytorch.models import high_res_stereo
 
 
-def test_hsmnet():
-
+def test_hsmnet_no_weights():
+    """ This won't give a good results, but we can check that the network
+    at least runs ok. """
     max_disp = 255
     entropy_threshold = -1
     scale_factor = 1.0

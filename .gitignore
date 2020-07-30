@@ -1,5 +1,8 @@
+# Model Weights
+tests/data/weights/
 # Pycharm
 /.idea
+
 
 # Generated files
 .tox

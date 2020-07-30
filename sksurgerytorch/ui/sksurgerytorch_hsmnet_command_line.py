@@ -15,7 +15,7 @@ def main(args=None):
     parser = argparse.ArgumentParser(description='sksurgeryhsmnet')
 
     parser.add_argument("-d", "--max_disp",
-                        required = False,
+                        required=False,
                         type=int,
                         default=255,
                         help="Max number of disparity levels")
@@ -30,8 +30,9 @@ def main(args=None):
                         required=False,
                         type=int,
                         default=1,
-                        help="Model level (1 = best & slowest, 3 = worst & fastest)")
-    
+                        help="Model level (1 = best & slowest, \
+                             3 = worst & fastest)")
+
     parser.add_argument("-w", "--weights",
                         required=True,
                         type=str,
@@ -42,7 +43,7 @@ def main(args=None):
                         type=float,
                         default=0.5,
                         help="Input scale factor")
-    
+
     parser.add_argument("-l", "--left_img",
                         required=True,
                         type=str,
@@ -57,7 +58,7 @@ def main(args=None):
                         required=True,
                         type=str,
                         help="Output file")
-   
+
     version_string = __version__
     friendly_version_string = version_string if version_string else 'unknown'
     parser.add_argument(
@@ -75,5 +76,3 @@ def main(args=None):
                          args.left_img,
                          args.right_img,
                          args.output)
-
-
