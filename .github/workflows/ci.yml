@@ -30,7 +30,7 @@ jobs:
 
       - name: Linting
         run: |
-          pylint --rcfile=tests/pylintrc sksurgerytorch tests
+          pylint --rcfile=tests/pylintrc --extension-pkg-whitelist=cv2 sksurgerytorch tests
 
 
   deploy:
