@@ -46,16 +46,29 @@ class HSMNet:
                  entropy_threshold: float = -1,
                  level: int = 1,
                  scale_factor: float = 0.5,
-                 weights=None):
+                 weights=None,
+                ):
+
+        if torch.cuda.is_available():
+            self.device = torch.device("cuda:0")
+            LOGGER.info("Using GPU")
+        else:
+            self.device = torch.device("cpu")
+            LOGGER.info("Using CPU")
+
+        print(self.device)
 
         self.max_disp = max_disp
         self.scale_factor = scale_factor
         self.entropy_threshold = entropy_threshold
         self.level = level
 
-        self.model = HSMNet_model(max_disp, entropy_threshold, level)
-        self.model = nn.DataParallel(self.model, device_ids=[0])
-        self.model.cuda()
+        self.model = HSMNet_model(max_disp, entropy_threshold, self.device,
+                                  level)
+
+        self.model = nn.DataParallel(self.model)
+
+        self.model.to(self.device)
         self.model.eval()
 
         self.pred_disp = None
@@ -101,13 +114,13 @@ class HSMNet:
         if self.model.module.maxdisp == 64:
             self.model.module.maxdisp = 128
         self.model.module.disp_reg8 = disparityregression(
-            self.model.module.maxdisp, 16).cuda()
+            self.model.module.maxdisp, 16).to(self.device)
         self.model.module.disp_reg16 = disparityregression(
-            self.model.module.maxdisp, 16).cuda()
+            self.model.module.maxdisp, 16).to(self.device)
         self.model.module.disp_reg32 = disparityregression(
-            self.model.module.maxdisp, 32).cuda()
+            self.model.module.maxdisp, 32).to(self.device)
         self.model.module.disp_reg64 = disparityregression(
-            self.model.module.maxdisp, 64).cuda()
+            self.model.module.maxdisp, 64).to(self.device)
 
         LOGGER.info("Model.module.maxdisp %s", self.model.module.maxdisp)
 
@@ -146,15 +159,17 @@ class HSMNet:
         imgR = np.lib.pad(imgR, ((0, 0), (0, 0), (top_pad, 0),
                                  (0, left_pad)), mode='constant', constant_values=0)
 
-        imgL = Variable(torch.FloatTensor(imgL).cuda())
-        imgR = Variable(torch.FloatTensor(imgR).cuda())
+        imgL = Variable(torch.FloatTensor(imgL).to(self.device))
+        imgR = Variable(torch.FloatTensor(imgR).to(self.device))
 
         LOGGER.info("Predicting disparity")
         with torch.no_grad():
-            torch.cuda.synchronize()
+            if self.device.type.startswith("cuda"):
+                torch.cuda.synchronize()
             start_time = time.time()
             self.pred_disp, self.entropy = self.model(imgL, imgR)
-            torch.cuda.synchronize()
+            if self.device.type.startswith("cuda"):
+                torch.cuda.synchronize()
             ttime = (time.time() - start_time)
             print('time = %.2f' % (ttime * 1000))
 

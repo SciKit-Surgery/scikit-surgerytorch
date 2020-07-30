@@ -15,12 +15,13 @@ import numpy as np
 #pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
 
 class HSMNet_model(nn.Module):
-    def __init__(self, maxdisp, clean, level=1):
+    def __init__(self, maxdisp, clean, device, level=1):
         super(HSMNet_model, self).__init__()
         self.maxdisp = maxdisp
         self.clean = clean
         self.feature_extraction = unet()
         self.level = level
+        self.device = device
 
         # block 4
         self.decoder6 = decoderBlock(6, 32, 32, up=True, pool=True)
@@ -48,12 +49,16 @@ class HSMNet_model(nn.Module):
         width = refimg_fea.shape[-1]
         #pylint:disable=no-member
         cost = Variable(
-            torch.cuda.FloatTensor(
+            torch.FloatTensor(
                 refimg_fea.size()[0],
                 refimg_fea.size()[1],
                 maxdisp,
                 refimg_fea.size()[2],
                 refimg_fea.size()[3]).fill_(0.))
+
+        if self.device.type.startswith("cuda"):
+            cost = cost.to(self.device)
+
         for i in range(maxdisp):
             feata = refimg_fea[:, :, :, i:width]
             featb = targetimg_fea[:, :, :, :width - i]

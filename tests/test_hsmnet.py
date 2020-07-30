@@ -2,6 +2,7 @@ import os
 import pytest
 import cv2
 import numpy as np
+import torch
 from sksurgerytorch.models import high_res_stereo
 
 
@@ -29,6 +30,7 @@ def test_hsmnet_no_weights():
 
 weights = ('tests/data/weights/final-768px.tar')
 
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not available")
 @pytest.mark.skipif(not os.path.exists(weights), reason="Weights not found")
 def test_hsmnet_pretrained_weights():
 
