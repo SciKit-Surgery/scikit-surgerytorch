@@ -53,6 +53,9 @@ setup(
     install_requires=[
         'six>=1.10',
         'numpy>=1.11',
+        'torch==1.4.0',
+        'torchvision==0.5.0',
+        'opencv-python'
     ],
 
     entry_points={
