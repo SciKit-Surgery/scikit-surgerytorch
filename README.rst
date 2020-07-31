@@ -134,4 +134,5 @@ Supported by `Wellcome`_ and `EPSRC`_.
 .. _`EPSRC`: https://www.epsrc.ac.uk/
 .. _`contributing guidelines`: https://github.com/UCL/scikit-surgerytorch/blob/master/CONTRIBUTING.rst
 .. _`license file`: https://github.com/UCL/scikit-surgerytorch/blob/master/LICENSE
+.. _`PythonTemplate`: https://github.com/UCL/PythonTemplate
 
