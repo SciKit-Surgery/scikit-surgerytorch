@@ -3,7 +3,6 @@ import os
 import pytest
 import cv2
 import numpy as np
-import torch
 from sksurgerytorch.models import high_res_stereo
 
 #pylint:disable=not-callable,invalid-name
