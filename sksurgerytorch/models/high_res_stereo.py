@@ -77,7 +77,7 @@ class HSMNet:
 
         if weights:
             LOGGER.info("Loading weights from %s", weights)
-            pretrained_dict = torch.load(weights)
+            pretrained_dict = torch.load(weights, map_location=self.device)
             pretrained_dict['state_dict'] = {
                 k: v for k, v in pretrained_dict['state_dict'].items() if 'disp' not in k}
             self.model.load_state_dict(

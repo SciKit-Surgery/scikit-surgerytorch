@@ -31,7 +31,6 @@ def test_hsmnet_no_weights():
 
 weights = ('tests/data/weights/final-768px.tar')
 
-@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not")
 @pytest.mark.skipif(not os.path.exists(weights), reason="Weights not found")
 def test_hsmnet_pretrained_weights():
     """ Test with pretrained weights."""
