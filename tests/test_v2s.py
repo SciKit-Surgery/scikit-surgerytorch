@@ -1,7 +1,6 @@
 """HSMNet Tests."""
 import os
 import pytest
-import cv2
 import numpy as np
 import torch
 from sksurgerytorch.models.volume_to_surface import Volume2SurfaceCNN
@@ -10,7 +9,7 @@ from sksurgerytorch.models.volume_to_surface import Volume2SurfaceCNN
 def test_v2snet_no_weights():
     """ This won't give a good results, but we can check that the network
     at least runs ok. """
-    
+
     grid_size = 64
     num_elements = grid_size*grid_size*grid_size
     V2SNet = Volume2SurfaceCNN(grid_size=grid_size)
@@ -33,4 +32,4 @@ def test_v2snet_with_weights():
     preop_signed = np.random.random(num_elements) - 0.5
     intraop_unsigned = np.random.random(num_elements)
 
-    displacement_field = V2SNet.predict(preop_signed, intraop_unsigned)
+    _ = V2SNet.predict(preop_signed, intraop_unsigned)
