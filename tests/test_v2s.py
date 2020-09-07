@@ -20,7 +20,7 @@ def test_v2snet_no_weights():
 
     V2SNet.predict(preop_signed, intraop_unsigned)
 
-weights = ('tests/data/weights/v2snet_checkpoint.tar')
+weights = ('tests/data/weights/v2s_80k_micha.tar')
 @pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA not found")
 @pytest.mark.skipif(not os.path.exists(weights), reason="Weights not found")
 def test_v2snet_with_weights():
@@ -33,4 +33,4 @@ def test_v2snet_with_weights():
     preop_signed = np.random.random(num_elements) - 0.5
     intraop_unsigned = np.random.random(num_elements)
 
-    V2SNet.predict(preop_signed, intraop_unsigned)
+    displacement_field = V2SNet.predict(preop_signed, intraop_unsigned)

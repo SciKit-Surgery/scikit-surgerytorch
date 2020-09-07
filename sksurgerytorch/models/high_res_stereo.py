@@ -21,8 +21,10 @@ from sksurgerytorch.models.high_res_stereo_model import HSMNet_model
 
 LOGGER = logging.getLogger(__name__)
 
-#pylint:disable=invalid-name, line-too-long, no-else-return
-#pylint:disable=useless-object-inheritance
+# pylint:disable=invalid-name, line-too-long, no-else-return
+# pylint:disable=useless-object-inheritance
+
+
 class HSMNet:
     """Class to encapsulate network form 'Hierarchical Deep Stereo Matching on
      High Resolution Images'.
@@ -48,7 +50,7 @@ class HSMNet:
                  level: int = 1,
                  scale_factor: float = 0.5,
                  weights=None,
-                ):
+                 ):
 
         if torch.cuda.is_available():
             self.device = torch.device("cuda:0")
@@ -191,7 +193,7 @@ class HSMNet:
              orig_img_size[0]),
             interpolation=cv2.INTER_LINEAR)
 
-        #pylint:disable=assignment-from-no-return
+        # pylint:disable=assignment-from-no-return
         # clip while keep inf
         invalid = np.logical_or(
             self.pred_disp == np.inf,
@@ -207,6 +209,7 @@ class toTensorLegacy(object):
     """
     .
     """
+
     def __call__(self, pic):
         """
         Args:
@@ -215,7 +218,7 @@ class toTensorLegacy(object):
         Returns:
             Tensor: Converted image.
         """
-        #pylint:disable=no-member
+        # pylint:disable=no-member
         if isinstance(pic, np.ndarray):
             # This is what TorchVision 0.2.0 returns for transforms.toTensor()
             # for np.ndarray
@@ -235,7 +238,7 @@ def run_hsmnet_model(max_disp,
                      left_image,
                      right_image,
                      output_file
-                    ):
+                     ):
     """ . """
     network = HSMNet(max_disp=max_disp,
                      entropy_threshold=entropy_threshold,
@@ -246,7 +249,7 @@ def run_hsmnet_model(max_disp,
     left = cv2.imread(left_image)
     right = cv2.imread(right_image)
 
-    #pylint:disable=unused-variable
+    # pylint:disable=unused-variable
     disp, entropy = network.predict(left, right)
 
     cv2.imwrite(output_file, disp)
