@@ -11,9 +11,9 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
 
-#pylint:disable=invalid-name, line-too-long, missing-docstring, too-many-locals
-#pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
-#pylint:disable=super-with-arguments
+# pylint:disable=invalid-name, line-too-long, missing-docstring, too-many-locals
+# pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
+# pylint:disable=super-with-arguments
 
 class HSMNet_model(nn.Module):
     def __init__(self, maxdisp, clean, device, level=1):
@@ -48,7 +48,7 @@ class HSMNet_model(nn.Module):
         diff feature volume
         '''
         width = refimg_fea.shape[-1]
-        #pylint:disable=no-member
+        # pylint:disable=no-member
         cost = Variable(
             torch.FloatTensor(
                 refimg_fea.size()[0],
@@ -64,7 +64,7 @@ class HSMNet_model(nn.Module):
             feata = refimg_fea[:, :, :, i:width]
             featb = targetimg_fea[:, :, :, :width - i]
 
-            #pylint:disable=unsupported-assignment-operation
+            # pylint:disable=unsupported-assignment-operation
             # concat
             if leftview:
                 cost[:, :refimg_fea.size()[1], i, :, i:] = torch.abs(
@@ -72,7 +72,7 @@ class HSMNet_model(nn.Module):
             else:
                 cost[:, :refimg_fea.size()[1], i, :, :width -
                      i] = torch.abs(featb - feata)
-        #pylint:disable=no-member
+        # pylint:disable=no-member
         cost = cost.contiguous()
         return cost
 
@@ -310,7 +310,6 @@ class decoderBlock(nn.Module):
 
                 if hasattr(m.bias, 'data'):
                     m.bias.data.zero_()
-
 
     def forward(self, fvl):
         # left
@@ -680,7 +679,7 @@ class pyramidPooling(nn.Module):
         self.model_name = model_name
         self.fusion_mode = fusion_mode
 
-    #@profile
+    # @profile
     def forward(self, x):
         h, w = x.shape[2:]
 
