@@ -96,6 +96,9 @@ class Volume2SurfaceCNN:
                 dim=1)) / torch.sum(mask64)
         maxDisplacement = torch.max(torch.norm(out64 * mask64, dim=1))
 
+        # This is the same sequence of commands as in Model/data.py in original
+        # v2snet, saveSample() function
         np_displacement = estimated_displacmement.detach().cpu().numpy()
+        np_displacement = np.transpose( np_displacement, (1,2,3,0) )
 
         return np_displacement.reshape(gs**3,-1)

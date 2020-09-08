@@ -29,9 +29,11 @@ def test_v2snet_with_weights():
     num_elements = grid_size*grid_size*grid_size
     V2SNet = Volume2SurfaceCNN(grid_size=grid_size, weights=weights)
 
-    preop_signed = np.random.random(num_elements) - 0.5
-    intraop_unsigned = np.random.random(num_elements)
+    preop_signed = np.load('tests/data/v2snet/preop.npy')
+    intraop_unsigned =np.load('tests/data/v2snet/intraop.npy')
 
     displacement = V2SNet.predict(preop_signed, intraop_unsigned)
 
-    print(displacement.shape)
+    expected_displacement = np.load('tests/data/v2snet/estimatedDisplacement.npy')
+
+    assert np.allclose(displacement, expected_displacement)
