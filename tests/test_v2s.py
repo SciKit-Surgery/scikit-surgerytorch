@@ -32,4 +32,6 @@ def test_v2snet_with_weights():
     preop_signed = np.random.random(num_elements) - 0.5
     intraop_unsigned = np.random.random(num_elements)
 
-    _ = V2SNet.predict(preop_signed, intraop_unsigned)
+    displacement = V2SNet.predict(preop_signed, intraop_unsigned)
+
+    print(displacement.shape)

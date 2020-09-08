@@ -96,4 +96,6 @@ class Volume2SurfaceCNN:
                 dim=1)) / torch.sum(mask64)
         maxDisplacement = torch.max(torch.norm(out64 * mask64, dim=1))
 
-        return estimated_displacmement.detach().cpu().numpy()
+        np_displacement = estimated_displacmement.detach().cpu().numpy()
+
+        return np_displacement.reshape(gs**3,-1)
