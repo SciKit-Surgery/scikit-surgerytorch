@@ -99,6 +99,6 @@ class Volume2SurfaceCNN:
         # This is the same sequence of commands as in Model/data.py in original
         # v2snet, saveSample() function
         np_displacement = estimated_displacmement.detach().cpu().numpy()
-        np_displacement = np.transpose( np_displacement, (1,2,3,0) )
+        np_displacement = np.transpose(np_displacement, (1, 2, 3, 0))
 
-        return np_displacement.reshape(gs**3,-1)
+        return np_displacement.reshape(gs**3, -1)

@@ -230,6 +230,7 @@ class toTensorLegacy(object):
         return self.__class__.__name__ + '()'
 
 
+
 def run_hsmnet_model(max_disp,
                      entropy_threshold,
                      level,
@@ -239,7 +240,7 @@ def run_hsmnet_model(max_disp,
                      right_image,
                      output_file
                      ):
-    """ . """
+    """ This is for the command line entry point """
     network = HSMNet(max_disp=max_disp,
                      entropy_threshold=entropy_threshold,
                      level=level,
