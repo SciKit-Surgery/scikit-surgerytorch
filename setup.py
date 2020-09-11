@@ -19,7 +19,7 @@ setup(
     long_description_content_type='text/x-rst',
     url='https://github.com/UCL/scikit-surgerytorch',
     author='Thomas Dowrick',
-    author_email='YOUR-EMAIL@ucl.ac.uk',
+    author_email='t.dowrick@ucl.ac.uk',
     license='BSD-3 license',
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -55,7 +55,7 @@ setup(
         'numpy>=1.11',
         'torch==1.4.0',
         'torchvision==0.5.0',
-        'opencv-python'
+        'opencv-contrib-python'
     ],
 
     entry_points={
