@@ -43,7 +43,7 @@ class Volume2SurfaceCNN:
         if weights is not None:
             optimizer = torch.optim.AdamW(self.model.parameters(), lr=0)
 
-            checkpoint = torch.load(weights)
+            checkpoint = torch.load(weights, map_location=self.device)
             self.model.load_state_dict(checkpoint["model"])
             if "optimizer" in checkpoint:
                 optimizer.load_state_dict(checkpoint["optimizer"])
