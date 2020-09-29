@@ -4,9 +4,9 @@ which is adapted from https://discuss.pytorch.org/t/unet-implementation/426
 """
 
 import os
-import io
 import logging
 import glob
+from skimage import io
 
 import torch
 from torch import nn
@@ -15,8 +15,13 @@ from torch.utils.data import Dataset, DataLoader
 
 LOGGER = logging.getLogger(__name__)
 
+#pylint:disable=invalid-name
+
 
 class UNet(nn.Module):
+    """
+    U-Net
+    """
     def __init__(
         self,
         in_channels=1,
@@ -51,7 +56,7 @@ class UNet(nn.Module):
                            learned upsampling.
                            'upsample' will use bilinear upsampling.
         """
-        super(UNet, self).__init__()
+        super().__init__()
         assert up_mode in ('upconv', 'upsample')
         self.padding = padding
         self.depth = depth
@@ -88,9 +93,11 @@ class UNet(nn.Module):
 
 
 class UNetConvBlock(nn.Module):
+    """
+    U-Net convolution block.
+    """
     def __init__(self, in_size, out_size, padding, batch_norm):
         """
-        U-Net convolution block.
 
         :param in_size: Number of input channels (int).
         :param out_size: Number of output channels (int).
@@ -100,7 +107,7 @@ class UNetConvBlock(nn.Module):
         :param batch_norm: Use BatchNorm after layers with an
                            activation function (bool).
         """
-        super(UNetConvBlock, self).__init__()
+        super().__init__()
         block = []
 
         block.append(
@@ -123,9 +130,11 @@ class UNetConvBlock(nn.Module):
 
 
 class UNetUpBlock(nn.Module):
+    """
+    U-Net upconvolution block.
+    """
     def __init__(self, in_size, out_size, up_mode, padding, batch_norm):
         """
-        U-Net upconvolution block.
 
         :param in_size: Number of input channels (int).
         :param out_size: Number of output channels (int).
@@ -139,7 +148,7 @@ class UNetUpBlock(nn.Module):
         :param batch_norm: Use BatchNorm after layers with an
                            activation function (bool).
         """
-        super(UNetUpBlock, self).__init__()
+        super().__init__()
         if up_mode == 'upconv':
             self.up = \
                 nn.ConvTranspose2d(in_size, out_size, kernel_size=2, stride=2)
@@ -151,7 +160,15 @@ class UNetUpBlock(nn.Module):
 
         self.conv_block = UNetConvBlock(in_size, out_size, padding, batch_norm)
 
-    def center_crop(self, layer, target_size):
+    @staticmethod
+    def center_crop(layer, target_size):
+        """
+        Center-crops the filters to match target_size.
+
+        :param layer: Filters to center-crop.
+        :param target_size: Target size to center-crop to.
+        :return: Center-cropped filters.
+        """
         _, _, layer_height, layer_width = layer.size()
         diff_y = (layer_height - target_size[0]) // 2
         diff_x = (layer_width - target_size[1]) // 2
@@ -178,7 +195,7 @@ class SegmentationDataset(Dataset):
         :param root_dir: Directory with all the data.
         :param transform: Transform applied to a sample.
         """
-        super(SegmentationDataset, self).__init__()
+        super().__init__()
         self.root_dir = root_dir
         self.transform = transform
         self.image_files = []
@@ -230,6 +247,9 @@ class SegmentationDataset(Dataset):
 
 
 def run():
+    """
+    Runs U-Net model.
+    """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     LOGGER.info(device)
