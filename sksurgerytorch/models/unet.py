@@ -1,5 +1,7 @@
-# From https://github.com/jvanvugt/pytorch-unet
-# which is adapted from https://discuss.pytorch.org/t/unet-implementation/426
+"""
+Implementation of U-Net adapted from https://github.com/jvanvugt/pytorch-unet
+which is adapted from https://discuss.pytorch.org/t/unet-implementation/426
+"""
 
 import os
 import io
@@ -87,6 +89,17 @@ class UNet(nn.Module):
 
 class UNetConvBlock(nn.Module):
     def __init__(self, in_size, out_size, padding, batch_norm):
+        """
+        U-Net convolution block.
+
+        :param in_size: Number of input channels (int).
+        :param out_size: Number of output channels (int).
+        :param padding: If True, apply padding such that the input shape
+                        is the same as the output (bool).
+                        This may introduce artifacts.
+        :param batch_norm: Use BatchNorm after layers with an
+                           activation function (bool).
+        """
         super(UNetConvBlock, self).__init__()
         block = []
 
@@ -111,6 +124,21 @@ class UNetConvBlock(nn.Module):
 
 class UNetUpBlock(nn.Module):
     def __init__(self, in_size, out_size, up_mode, padding, batch_norm):
+        """
+        U-Net upconvolution block.
+
+        :param in_size: Number of input channels (int).
+        :param out_size: Number of output channels (int).
+        :param up_mode: One of 'upconv' or 'upsample' (str).
+                       'upconv' will use transposed convolutions for
+                       learned upsampling.
+                       'upsample' will use bilinear upsampling.
+        :param padding: If True, apply padding such that the input shape
+                        is the same as the output (bool).
+                        This may introduce artifacts.
+        :param batch_norm: Use BatchNorm after layers with an
+                           activation function (bool).
+        """
         super(UNetUpBlock, self).__init__()
         if up_mode == 'upconv':
             self.up = \
@@ -141,23 +169,23 @@ class UNetUpBlock(nn.Module):
         return out
 
 
-class LiverSegmentationDataset(Dataset):
+class SegmentationDataset(Dataset):
     """
-    Liver segmentation dataset.
+    Segmentation dataset.
     """
     def __init__(self, root_dir, transform=None):
         """
         :param root_dir: Directory with all the data.
         :param transform: Transform applied to a sample.
         """
-        super(LiverSegmentationDataset, self).__init__()
+        super(SegmentationDataset, self).__init__()
         self.root_dir = root_dir
         self.transform = transform
         self.image_files = []
         self.mask_files = []
 
-        # Each patient case is a directory in root_dir.
-        # Each patient directory has a images and masks directories.
+        # Each subject is a directory in root_dir.
+        # Each subject directory has a images and masks directories.
         # Iterate through the directories to get the list of files.
         sub_dirs = [f.path for f in os.scandir(root_dir) if f.is_dir()]
         if not sub_dirs:
@@ -208,15 +236,20 @@ def run():
 
     model = UNet(n_classes=2, padding=True, up_mode='upsample').to(device)
     optim = torch.optim.Adam(model.parameters())
-    dataloader = ...
+
+    train_dataset = SegmentationDataset(
+        './2020-02-22-LiverSemanticSegmentation')
+    train_dataloader = DataLoader(train_dataset, batch_size=4,
+                                  shuffle=True, num_workers=0)
+
     epochs = 10
 
     for _ in range(epochs):
-        for X, y in dataloader:
-            X = X.to(device)  # [N, 1, H, W]
-            y = y.to(device)  # [N, H, W] with class indices (0, 1)
-            prediction = model(X)  # [N, 2, H, W]
-            loss = F.cross_entropy(prediction, y)
+        for image, mask in train_dataloader:
+            image = image.to(device)  # [N, 1, H, W]
+            mask = mask.to(device)  # [N, H, W] with class indices (0, 1)
+            prediction = model(image)  # [N, 2, H, W]
+            loss = F.cross_entropy(prediction, mask)
 
             optim.zero_grad()
             loss.backward()
