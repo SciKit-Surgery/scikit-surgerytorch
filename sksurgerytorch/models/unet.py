@@ -12,6 +12,7 @@ import getpass
 import glob
 from skimage import io
 from skimage import transform
+import numpy as np
 
 import torch
 from torch import nn
@@ -249,6 +250,9 @@ class SegmentationDataset(Dataset):
         image = transform.resize(image, (512, 512))
         mask = transform.resize(mask, (512, 512))
 
+        # Swap the axes to [C, H, W] format which PyTorch uses.
+        image = np.transpose(image, (2, 0, 1))
+
         sample = {'image': image, 'mask': mask}
 
         if self.transform:
@@ -325,24 +329,28 @@ def run(log_dir,
     LOGGER.info(device)
 
     unet = UNet(in_channels=3,
-                n_classes=2,
+                n_classes=1,
                 padding=True,
                 up_mode='upsample').to(device)
+    # unet = unet.float()
 
     if mode == 'train':
         optim = torch.optim.Adam(unet.parameters())
 
-        train_dataset = SegmentationDataset(#data_dir
-            './2020-02-22-LiverSemanticSegmentation')
+        train_dataset = SegmentationDataset(data_dir)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
                                       shuffle=True, num_workers=0)
 
         for _ in range(epochs):
-            for sample in train_dataloader:
-                image = sample['image'].to(device)  # [N, 1, H, W]
-                mask = sample['mask'].to(device)  # [N, H, W] with class indices (0, 1)
-                prediction = unet(image)  # [N, 2, H, W]
-                loss = F.cross_entropy(prediction, mask)
+            for i_batch, sample_batched in enumerate(train_dataloader):
+                image_batch = sample_batched['image'].to(device)  # [N, 1, H, W]
+                mask_batch = sample_batched['mask'].to(device)  # [N, H, W] with class indices (0, 1)
+                image_batch = image_batch.float()
+                # mask_batch = mask_batch.float()
+                mask_batch = torch.reshape(mask_batch, (-1, 1, 512, 512))
+                prediction = unet(image_batch)  # [N, 2, H, W]
+                prediction = prediction.float()
+                loss = F.binary_cross_entropy_with_logits(prediction, mask_batch)
 
                 optim.zero_grad()
                 loss.backward()

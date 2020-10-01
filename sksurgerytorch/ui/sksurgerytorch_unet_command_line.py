@@ -52,7 +52,7 @@ def main(args=None):
     parser.add_argument("-e", "--epochs",
                         required=False,
                         type=int,
-                        default=5,
+                        default=1,
                         help="Number of epochs.")
 
     parser.add_argument("-b", "--batch_size",
