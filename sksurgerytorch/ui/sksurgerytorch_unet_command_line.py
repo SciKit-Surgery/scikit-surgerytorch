@@ -20,13 +20,17 @@ def main(args=None):
     parser.add_argument("-l", "--log_dir",
                         required=False,
                         type=str,
-                        default="logs/",
-                        help="Log directory for tensorboard.")
+                        help="Log directory for TensorBoard.")
 
-    parser.add_argument("-d", "--data_dir",
+    parser.add_argument("-d", "--train_data_dir",
                         required=False,
                         type=str,
                         help="Root directory of data to train on.")
+
+    parser.add_argument("-val", "--val_data_dir",
+                        required=False,
+                        type=str,
+                        help="Root directory of data to validate on.")
 
     parser.add_argument("-m", "--model_path",
                         required=False,
@@ -52,13 +56,13 @@ def main(args=None):
     parser.add_argument("-e", "--epochs",
                         required=False,
                         type=int,
-                        default=1,
+                        default=50,
                         help="Number of epochs.")
 
     parser.add_argument("-b", "--batch_size",
                         required=False,
                         type=int,
-                        default=2,
+                        default=6,
                         help="Batch size.")
 
     parser.add_argument("-lr", "--learning_rate",
@@ -83,7 +87,8 @@ def main(args=None):
     args = parser.parse_args(args)
 
     unet.run(args.log_dir,
-             args.data_dir,
+             args.train_data_dir,
+             args.val_data_dir,
              args.model_path,
              args.mode,
              args.save_path,

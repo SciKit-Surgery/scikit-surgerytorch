@@ -15,9 +15,13 @@ from skimage import transform
 import numpy as np
 
 import torch
+import torchvision
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
+from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms
+
 from sksurgerytorch import __version__
 
 LOGGER = logging.getLogger(__name__)
@@ -246,9 +250,9 @@ class SegmentationDataset(Dataset):
         image = io.imread(self.image_files[index])
         mask = io.imread(self.mask_files[index])
 
-        # TODO: Resize image/mask to 512x512 for now.
-        image = transform.resize(image, (512, 512))
-        mask = transform.resize(mask, (512, 512))
+        # TODO: Resize image/mask to 256 x 256 for now.
+        image = transform.resize(image, (256, 256))
+        mask = transform.resize(mask, (256, 256))
 
         # Swap the axes to [C, H, W] format which PyTorch uses.
         image = np.transpose(image, (2, 0, 1))
@@ -261,8 +265,16 @@ class SegmentationDataset(Dataset):
         return sample
 
 
+def gen_mask(mask_pred, threshold):
+    mask_pred = mask_pred.clone()
+    mask_pred[:, :, :, :][mask_pred[:, :, :, :] < threshold] = 0
+    mask_pred[:, :, :, :][mask_pred[:, :, :, :] >= threshold] = 1.0
+    return mask_pred
+
+
 def run(log_dir,
-        data_dir,
+        train_data_dir,
+        val_data_dir,
         model_path,
         mode,
         save_path,
@@ -275,8 +287,9 @@ def run(log_dir,
     Helper function to run the U-Net model from
     the command line entry point.
 
-    :param log_dir: directory for log files for tensorboard.
-    :param data_dir: root directory of training data.
+    :param log_dir: directory for log files for TensorBoard.
+    :param train_data_dir: root directory of training data.
+    :param val_data_dir: root directory of validataion data.
     :param model_path: file of previously saved model.
     :param mode: running mode of the model (str).
                  'train': training,
@@ -328,35 +341,152 @@ def run(log_dir,
 
     LOGGER.info(device)
 
+    n_classes = 1
     unet = UNet(in_channels=3,
-                n_classes=1,
+                n_classes=n_classes,
                 padding=True,
-                up_mode='upsample').to(device)
-    # unet = unet.float()
+                batch_norm=True,
+                up_mode='upconv').to(device)
 
     if mode == 'train':
+        # For TensorBoard.
+        writer = SummaryWriter(log_dir=log_dir)
+
+        # Log in every logging_steps steps.
+        train_logging_steps = 100
+        val_logging_steps = 20
+
         optim = torch.optim.Adam(unet.parameters())
 
-        train_dataset = SegmentationDataset(data_dir)
+        train_dataset = SegmentationDataset(train_data_dir)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
                                       shuffle=True, num_workers=0)
 
-        for _ in range(epochs):
+        if val_data_dir is not None:
+            val_dataset = SegmentationDataset(val_data_dir)
+            val_dataloader = DataLoader(val_dataset, batch_size=batch_size,
+                                        shuffle=True, num_workers=0)
+
+        for epoch in range(epochs):
+            print('Epoch {}/{}'.format(epoch, epochs - 1))
+
+            epoch_train_loss = 0
+            epoch_val_loss = 0
+
             for i_batch, sample_batched in enumerate(train_dataloader):
-                image_batch = sample_batched['image'].to(device)  # [N, 1, H, W]
-                mask_batch = sample_batched['mask'].to(device)  # [N, H, W] with class indices (0, 1)
+                image_batch = sample_batched['image'].to(device)
+                mask_batch = sample_batched['mask'].to(device)
                 image_batch = image_batch.float()
-                # mask_batch = mask_batch.float()
-                mask_batch = torch.reshape(mask_batch, (-1, 1, 512, 512))
-                prediction = unet(image_batch)  # [N, 2, H, W]
+                mask_batch = torch.reshape(mask_batch,
+                                           (-1,
+                                            n_classes,
+                                            mask_batch.shape[1],
+                                            mask_batch.shape[2]))
+                prediction = unet(image_batch)
                 prediction = prediction.float()
-                loss = F.binary_cross_entropy_with_logits(prediction, mask_batch)
+
+                # For TensorBoard.
+                global_step = i_batch + \
+                    epoch * int(np.ceil(len(train_dataset) / batch_size))
+
+                if global_step % train_logging_steps == 0:
+                    image_grid = torchvision.utils.make_grid(image_batch)
+                    writer.add_image('train/input_image', image_grid,
+                                     global_step=global_step)
+                    mask_grid = torchvision.utils.make_grid(mask_batch)
+                    writer.add_image('train/input_mask', mask_grid,
+                                     global_step=global_step)
+
+                    # Threshold the prediction to generate mask.
+                    thresholded_prediction = gen_mask(prediction, 0.5)
+
+                    pred_mask_grid = \
+                        torchvision.utils.make_grid(thresholded_prediction)
+                    writer.add_image('train/pred_mask', pred_mask_grid,
+                                     global_step=global_step)
+
+                if n_classes == 1:
+                    train_loss = F.binary_cross_entropy_with_logits(prediction,
+                                                                    mask_batch)
+                else:
+                    train_loss = F.cross_entropy(prediction, mask_batch)
+
+                # For TensorBoard.
+                if global_step % train_logging_steps == 0:
+                    writer.add_scalar('loss/train', train_loss,
+                                      global_step=global_step)
+
+                epoch_train_loss += train_loss
 
                 optim.zero_grad()
-                loss.backward()
+                train_loss.backward()
                 optim.step()
 
+            epoch_train_loss /= (i_batch + 1)
 
+            # For TensorBoard.
+            writer.add_scalar('epoch_loss/train', epoch_train_loss,
+                              global_step=epoch)
+
+            # Validation.
+            if val_data_dir is not None:
+                with torch.no_grad():
+                    # Set the model into evaluation mode.
+                    unet.eval()
+
+                    for i_batch, sample_batched in enumerate(val_dataloader):
+                        image_batch = sample_batched['image'].to(device)
+                        mask_batch = sample_batched['mask'].to(device)
+                        image_batch = image_batch.float()
+                        mask_batch = torch.reshape(mask_batch,
+                                                   (-1,
+                                                    n_classes,
+                                                    mask_batch.shape[1],
+                                                    mask_batch.shape[2]))
+                        prediction = unet(image_batch)
+                        prediction = prediction.float()
+
+                        # For TensorBoard.
+                        global_step = i_batch + \
+                            epoch * int(np.ceil(len(val_dataset) / batch_size))
+
+                        if global_step % val_logging_steps == 0:
+                            image_grid = \
+                                torchvision.utils.make_grid(image_batch)
+                            writer.add_image('val/input_image', image_grid,
+                                             global_step=global_step)
+                            mask_grid = torchvision.utils.make_grid(mask_batch)
+                            writer.add_image('val/input_mask', mask_grid,
+                                             global_step=global_step)
+
+                            # Threshold the prediction to generate mask.
+                            thresholded_prediction = gen_mask(prediction, 0.5)
+
+                            pred_mask_grid = \
+                                torchvision.utils.make_grid(
+                                    thresholded_prediction)
+                            writer.add_image('val/pred_mask', pred_mask_grid,
+                                             global_step=global_step)
+
+                        if n_classes == 1:
+                            val_loss = F.binary_cross_entropy_with_logits(
+                                prediction,
+                                mask_batch)
+                        else:
+                            val_loss = F.cross_entropy(prediction, mask_batch)
+
+                        epoch_val_loss += val_loss
+
+                    epoch_val_loss /= (i_batch + 1)
+
+                    # For TensorBoard.
+                    writer.add_scalar('epoch_loss/val', val_loss,
+                                      global_step=epoch)
+
+                # Set the model back into training mode.
+                unet.train()
+
+        writer.close()
 
 
 
