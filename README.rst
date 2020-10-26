@@ -1,11 +1,12 @@
 scikit-surgerytorch
 ===============================
 
-.. image:: https://github.com/UCL/scikit-surgerytorch/raw/master/project-icon.png
-   :height: 128px
+.. image:: https://github.com/UCL/scikit-surgerytorch/raw/master/weiss_logo.png
    :width: 128px
    :target: https://github.com/UCL/scikit-surgerytorch
    :alt: Logo
+
+|
 
 .. image:: https://github.com/UCL/scikit-surgerytorch/badges/master/build.svg
    :target: https://github.com/UCL/scikit-surgerytorch/pipelines
