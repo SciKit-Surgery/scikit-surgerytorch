@@ -11,17 +11,17 @@ LOGGER = logging.getLogger(__name__)
 #pylint:disable=unused-variable, super-with-arguments, invalid-name
 
 class Volume2SurfaceCNN:
-    """Class to encapsulate network form 'Non-Rigid Volume to Surface
+    """Class to encapsulate network form 'Non-Rigid Volume to Surface \
     Registration using a Data-Driven Biomechanical Model'.
 
-     Thanks to
-      `Micha Pfieffer <https://gitlab.com/nct_tso_public/Volume2SurfaceCNNo>`_,\
-          for their network implementation.
+    Thanks to \
+    `Micha Pfieffer <https://gitlab.com/nct_tso_public/Volume2SurfaceCNNo>`_,\
+    for their network implementation.
 
-      :param mask: If true, use maskgin
-      :type mask: bool
-      :param weights: Path to trained model weights (.tar file)
-      :type weights: str
+    :param mask: If true, use masking
+    :type mask: bool
+    :param weights: Path to trained model weights (.tar file)
+    :type weights: str
     """
 
     def __init__(self,
@@ -56,12 +56,11 @@ class Volume2SurfaceCNN:
                 intraoperative: np.ndarray) -> np.ndarray:
         """Predict the displacement field between model and surface.
 
-        :param preoperative:
+        :param preoperative: Preoperative surface/point cloud
         :type preoperative: np.ndarray
-        :param intraoperative: [description]
+        :param intraoperative: Intraoperative surface/point cloud
         :type intraoperative: np.ndarray
-        :raises IOError: [description]
-        :return: [description]
+        :return: Displacement field
         :rtype: np.ndarray
         """
         gs = self.grid_size

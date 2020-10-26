@@ -1,13 +1,20 @@
+
+scikit-surgerytorch documentation
+================================
+
 .. include:: ../README.rst
+   :start-after: .. features-start
+   :end-before: .. features-end
 
-Contents
-~~~~~~~~
+`Source code <https://github.com/UCL/scikit-surgerytorch/>`_ is avaialble on GitHub.
+
 .. toctree::
-  :maxdepth: 1
+   :maxdepth: 2
 
-  Module Contents <modules>
-  notebooks/first_notebook
+   readme
 
-* :ref:`modindex`
-* :ref:`genindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+   :caption: Module Reference
+
+   module_ref
