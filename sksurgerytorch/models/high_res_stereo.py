@@ -26,22 +26,22 @@ LOGGER = logging.getLogger(__name__)
 
 
 class HSMNet:
-    """Class to encapsulate network form 'Hierarchical Deep Stereo Matching on
-     High Resolution Images'.
+    """Class to encapsulate network form 'Hierarchical Deep Stereo Matching on \
+    High Resolution Images'.
 
-     Thanks to
-      `Gengshang Yang <https://github.com/gengshan-y/high-res-stereo>`_, for
-      their network implementation.
+    Thanks to \
+    `Gengshang Yang <https://github.com/gengshan-y/high-res-stereo>`_, for \
+    their network implementation.
 
-      :param max_disp: Maximum number of disparity levels
-      :param entropy_threshold: Pixels with entropy above this value will be
-      ignored in the disparity map. Disabled if set to -1.
-      :param level: Set to 1, 2 or 3 to trade off quality of depth estimation
-       against runtime. 1 = best depth estimation, longer runtime,
-        3 = worst depth estimation, fastest runtime.
-      :param scale_factor: Images can be resized before passing to the network,
-       for perfomance impromvents. This sets the scale factor.
-       :param weights: Path to trained model weights (.tar file)
+    :param max_disp: Maximum number of disparity levels
+    :param entropy_threshold: Pixels with entropy above this value will be \
+    ignored in the disparity map. Disabled if set to -1.
+    :param level: Set to 1, 2 or 3 to trade off quality of depth estimation \
+    against runtime. 1 = best depth estimation, longer runtime, \
+    3 = worst depth estimation, fastest runtime.
+    :param scale_factor: Images can be resized before passing to the network, \
+    for perfomance impromvents. This sets the scale factor.
+    :param weights: Path to trained model weights (.tar file)
     """
 
     def __init__(self,
