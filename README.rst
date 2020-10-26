@@ -9,7 +9,7 @@ scikit-surgerytorch
 |
 
 .. image:: https://github.com/UCL/scikit-surgerytorch/badges/master/build.svg
-   :target: https://github.com/UCL/scikit-surgerytorch/pipelines
+   :target: https://github.com/UCL/scikit-surgerytorch/actions
    :alt: GitLab-CI test status
 
 .. image:: https://readthedocs.org/projects/scikit-surgerytorch/badge/?version=latest
