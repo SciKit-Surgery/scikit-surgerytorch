@@ -12,10 +12,6 @@ scikit-surgerytorch
    :target: https://github.com/UCL/scikit-surgerytorch/pipelines
    :alt: GitLab-CI test status
 
-.. image:: https://github.com/UCL/scikit-surgerytorch/badges/master/coverage.svg
-    :target: https://github.com/UCL/scikit-surgerytorch/commits/master
-    :alt: Test coverage
-
 .. image:: https://readthedocs.org/projects/scikit-surgerytorch/badge/?version=latest
     :target: http://scikit-surgerytorch.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
