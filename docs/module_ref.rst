@@ -1,6 +1,6 @@
 
 Stereo Reconstruction
-=====================
+^^^^^^^^^^^^^^^^^^^^^
 
 High Resolution Stereo
 ----------------------
@@ -9,7 +9,7 @@ High Resolution Stereo
     :members:
 
 Non Rigid Registration
-======================
+^^^^^^^^^^^^^^^^^^^^^^
 
 Volume 2 Surface CNN
 --------------------
