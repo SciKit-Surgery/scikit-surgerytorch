@@ -11,7 +11,7 @@ import torch.nn as nn
 #pylint:disable=missing-class-docstring, redefined-outer-name
 #pylint:disable=unused-variable, super-with-arguments, line-too-long
 #pylint:disable=attribute-defined-outside-init, too-many-instance-attributes
-#pylint:disable=access-member-before-definition
+#pylint:disable=access-member-before-definition, abstract-method
 
 class ConstPaddedConv(nn.Module):
     def __init__(
