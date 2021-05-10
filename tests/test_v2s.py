@@ -6,6 +6,7 @@ import torch
 from sksurgerytorch.models.volume_to_surface import Volume2SurfaceCNN
 
 #pylint:disable=not-callable,invalid-name
+@pytest.mark.skipif(sys.platform == 'win32', reason="does not run on windows, as CI machines have little memory.")
 def test_v2snet_no_weights():
     """ This won't give a good results, but we can check that the network
     at least runs ok. """
