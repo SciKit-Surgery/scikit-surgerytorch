@@ -13,7 +13,7 @@ import numpy as np
 
 # pylint:disable=invalid-name, line-too-long, missing-docstring, too-many-locals
 # pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
-# pylint:disable=super-with-arguments
+# pylint:disable=super-with-arguments, abstract-method
 
 class HSMNet_model(nn.Module):
     def __init__(self, maxdisp, clean, device, level=1):
