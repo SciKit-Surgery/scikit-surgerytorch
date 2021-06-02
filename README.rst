@@ -1,19 +1,16 @@
 scikit-surgerytorch
 ===============================
 
-.. image:: https://github.com/UCL/scikit-surgerytorch/raw/master/project-icon.png
-   :height: 128px
+.. image:: https://github.com/UCL/scikit-surgerytorch/raw/master/weiss_logo.png
    :width: 128px
    :target: https://github.com/UCL/scikit-surgerytorch
    :alt: Logo
 
-.. image:: https://github.com/UCL/scikit-surgerytorch/badges/master/build.svg
-   :target: https://github.com/UCL/scikit-surgerytorch/pipelines
-   :alt: GitLab-CI test status
+|
 
-.. image:: https://github.com/UCL/scikit-surgerytorch/badges/master/coverage.svg
-    :target: https://github.com/UCL/scikit-surgerytorch/commits/master
-    :alt: Test coverage
+.. image:: https://github.com/UCL/scikit-surgerytorch/workflows/.github/workflows/ci.yml/badge.svg
+   :target: https://github.com/UCL/scikit-surgerytorch/actions
+   :alt: GitHub Actions CI test status
 
 .. image:: https://readthedocs.org/projects/scikit-surgerytorch/badge/?version=latest
     :target: http://scikit-surgerytorch.readthedocs.io/en/latest/?badge=latest
