@@ -25,7 +25,7 @@ from sksurgerytorch import __version__
 
 LOGGER = logging.getLogger(__name__)
 
-#pylint:disable=invalid-name,too-many-locals,not-callable,too-many-branches,too-many-statements
+#pylint:disable=invalid-name,too-many-locals,not-callable,too-many-branches,too-many-statements,abstract-method
 
 
 class UNet(nn.Module):
