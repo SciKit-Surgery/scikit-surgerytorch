@@ -5,6 +5,8 @@
 numpy
 ipykernel
 nbsphinx
-torch==1.6.0 
+tensorboard
+torch==1.6.0
 torchvision==0.7.0
 opencv-contrib-python
+scikit-image

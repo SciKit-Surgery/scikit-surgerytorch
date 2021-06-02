@@ -6,6 +6,7 @@ import argparse
 from sksurgerytorch import __version__
 import sksurgerytorch.models.high_res_stereo as hrs
 
+
 def main(args=None):
     """
     Entry point for sksurgeryhsmnet script.
