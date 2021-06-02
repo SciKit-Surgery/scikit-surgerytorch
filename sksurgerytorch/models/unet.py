@@ -20,13 +20,12 @@ from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision import transforms
 
 from sksurgerytorch import __version__
 
 LOGGER = logging.getLogger(__name__)
 
-#pylint:disable=invalid-name
+#pylint:disable=invalid-name,too-many-locals,not-callable,too-many-branches,too-many-statements
 
 
 class UNet(nn.Module):
@@ -50,7 +49,7 @@ class UNet(nn.Module):
         https://arxiv.org/abs/1505.04597
 
         Using the default arguments will yield the exact version used
-        in the original paper
+        in the original paper.
 
         Args:
             in_channels (int): number of input channels
@@ -90,6 +89,12 @@ class UNet(nn.Module):
         self.last = nn.Conv2d(prev_channels, n_classes, kernel_size=1)
 
     def forward(self, x):
+        """
+        Forward pass.
+
+        :param x: input tensors.
+        :return: output tensors.
+        """
         blocks = []
         for i, down in enumerate(self.down_path):
             x = down(x)
@@ -109,7 +114,6 @@ class UNetConvBlock(nn.Module):
     """
     def __init__(self, in_size, out_size, padding, batch_norm):
         """
-
         :param in_size: number of input channels (int).
         :param out_size: number of output channels (int).
         :param padding: if True, apply padding such that the input shape
@@ -136,6 +140,12 @@ class UNetConvBlock(nn.Module):
         self.block = nn.Sequential(*block)
 
     def forward(self, x):
+        """
+        Forward pass.
+
+        :param x: input tensors.
+        :return: output tensors.
+        """
         out = self.block(x)
         return out
 
@@ -146,7 +156,6 @@ class UNetUpBlock(nn.Module):
     """
     def __init__(self, in_size, out_size, up_mode, padding, batch_norm):
         """
-
         :param in_size: number of input channels (int).
         :param out_size: number of output channels (int).
         :param up_mode: one of 'upconv' or 'upsample' (str).
@@ -189,6 +198,13 @@ class UNetUpBlock(nn.Module):
         ]
 
     def forward(self, x, bridge):
+        """
+        Forward pass.
+
+        :param x: input tensors.
+        :param bridge: tensors from the down path to be concatenated.
+        :return: output tensors.
+        """
         up = self.up(x)
         crop1 = self.center_crop(bridge, up.shape[2:])
         out = torch.cat([up, crop1], 1)
@@ -201,14 +217,14 @@ class SegmentationDataset(Dataset):
     """
     Segmentation dataset.
     """
-    def __init__(self, root_dir, transform=None):
+    def __init__(self, root_dir, transforms=None):
         """
         :param root_dir: directory with all the data.
-        :param transform: transform applied to a sample.
+        :param transforms: transforms applied to a sample.
         """
         super().__init__()
         self.root_dir = root_dir
-        self.transform = transform
+        self.transforms = transforms
         self.image_files = []
         self.mask_files = []
 
@@ -250,7 +266,7 @@ class SegmentationDataset(Dataset):
         image = io.imread(self.image_files[index])
         mask = io.imread(self.mask_files[index])
 
-        # TODO: Resize image/mask to 256 x 256 for now.
+        # Resize image/mask to 256 x 256.
         image = transform.resize(image, (256, 256))
         mask = transform.resize(mask, (256, 256))
 
@@ -259,13 +275,21 @@ class SegmentationDataset(Dataset):
 
         sample = {'image': image, 'mask': mask}
 
-        if self.transform:
-            sample = self.transform(sample)
+        if self.transforms:
+            sample = self.transforms(sample)
 
         return sample
 
 
-def gen_mask(mask_pred, threshold):
+def generate_mask(mask_pred, threshold):
+    """
+    Generates masks from the prediction from the network
+    by setting as 1 if the pixel value >= threshold, 0 otherwise.
+
+    :param mask_pred: prediction from the network.
+    :param threshold: threshold for masking.
+    :return: the mask.
+    """
     mask_pred = mask_pred.clone()
     mask_pred[:, :, :, :][mask_pred[:, :, :, :] < threshold] = 0
     mask_pred[:, :, :, :][mask_pred[:, :, :, :] >= threshold] = 1.0
@@ -281,16 +305,15 @@ def run(log_dir,
         test_path,
         epochs,
         batch_size,
-        learning_rate,
-        patience):
+        learning_rate):
     """
     Helper function to run the U-Net model from
     the command line entry point.
 
     :param log_dir: directory for log files for TensorBoard.
     :param train_data_dir: root directory of training data.
-    :param val_data_dir: root directory of validataion data.
-    :param model_path: file of previously saved model.
+    :param val_data_dir: root directory of validation data.
+    :param model_path: path to the pre-trained model.
     :param mode: running mode of the model (str).
                  'train': training,
                  'test': testing.
@@ -298,8 +321,7 @@ def run(log_dir,
     :param test_path: input image/directory to test.
     :param epochs: number of epochs.
     :param batch_size: batch size.
-    :param learning_rate: learning rate for optimizer.
-    :param patience: number of steps to tolerate non-improving accuracy
+    :param learning_rate: learning rate for optimiser.
     """
     now = datetime.datetime.now()
     date_format = now.today().strftime("%Y-%m-%d")
@@ -334,8 +356,8 @@ def run(log_dir,
     LOGGER.info("Starting U-Net with platform: %s.", str(platform.uname()))
     LOGGER.info("Starting U-Net with cwd: %s.", os.getcwd())
     LOGGER.info("Starting U-Net with path: %s.", sys.path)
-    LOGGER.info("Starting U-Net with save: %s.", save_path)
-    LOGGER.info("Starting U-Net with test: %s.", test_path)
+    LOGGER.info("Starting U-Net with save path: %s.", save_path)
+    LOGGER.info("Starting U-Net with test path: %s.", test_path)
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -348,6 +370,10 @@ def run(log_dir,
                 batch_norm=True,
                 up_mode='upconv').to(device)
 
+    if model_path is not None:
+        # Load a pre-trained model. Assumes state_dict of the model was saved.
+        unet.load_state_dict(torch.load(model_path))
+
     if mode == 'train':
         # For TensorBoard.
         writer = SummaryWriter(log_dir=log_dir)
@@ -356,7 +382,7 @@ def run(log_dir,
         train_logging_steps = 100
         val_logging_steps = 20
 
-        optim = torch.optim.Adam(unet.parameters())
+        optim = torch.optim.Adam(unet.parameters(), lr=learning_rate)
 
         train_dataset = SegmentationDataset(train_data_dir)
         train_dataloader = DataLoader(train_dataset, batch_size=batch_size,
@@ -372,6 +398,7 @@ def run(log_dir,
 
             epoch_train_loss = 0
             epoch_val_loss = 0
+            number_of_batches = 0
 
             for i_batch, sample_batched in enumerate(train_dataloader):
                 image_batch = sample_batched['image'].to(device)
@@ -398,7 +425,7 @@ def run(log_dir,
                                      global_step=global_step)
 
                     # Threshold the prediction to generate mask.
-                    thresholded_prediction = gen_mask(prediction, 0.5)
+                    thresholded_prediction = generate_mask(prediction, 0.5)
 
                     pred_mask_grid = \
                         torchvision.utils.make_grid(thresholded_prediction)
@@ -417,12 +444,13 @@ def run(log_dir,
                                       global_step=global_step)
 
                 epoch_train_loss += train_loss
+                number_of_batches += 1
 
                 optim.zero_grad()
                 train_loss.backward()
                 optim.step()
 
-            epoch_train_loss /= (i_batch + 1)
+            epoch_train_loss /= number_of_batches
 
             # For TensorBoard.
             writer.add_scalar('epoch_loss/train', epoch_train_loss,
@@ -460,7 +488,8 @@ def run(log_dir,
                                              global_step=global_step)
 
                             # Threshold the prediction to generate mask.
-                            thresholded_prediction = gen_mask(prediction, 0.5)
+                            thresholded_prediction = \
+                                generate_mask(prediction, 0.5)
 
                             pred_mask_grid = \
                                 torchvision.utils.make_grid(
@@ -486,46 +515,58 @@ def run(log_dir,
                 # Set the model back into training mode.
                 unet.train()
 
+        if save_path is not None:
+            torch.save(unet.state_dict(), save_path)
+
         writer.close()
+    elif mode == 'test':
+        if test_path is not None:
+            if os.path.isfile(test_path):
+                test_files = [test_path]
+            elif os.path.isdir(test_path):
+                filenames = os.listdir(test_path)
+                filenames.sort()
+                test_files = []
 
+                for filename in filenames:
+                    test_files.append(os.path.join(test_path, filename))
+            else:
+                raise ValueError("Invalid value for test parameter ")
 
+            for test_file in test_files:
+                image = io.imread(test_file)
+                image_width = image.shape[1]
+                image_height = image.shape[0]
+                image = transform.resize(image, (256, 256))
 
-    # unet = UNet(log_dir, data, working, omit, model,
-    #                   learning_rate=learning_rate,
-    #                   epochs=epochs,
-    #                   batch_size=batch_size,
-    #                   patience=patience
-    #                   )
+                # Swap the axes to [C, H, W] format which PyTorch uses.
+                image = np.transpose(image, (2, 0, 1))
 
-    # if save_path is not None:
-    #     unet.save_model(save_path)
-    #
-    # if test_path is not None:
-    #     if os.path.isfile(test_path):
-    #         test_files = [test_path]
-    #     elif os.path.isdir(test_path):
-    #         test_files = ss.get_sorted_files_from_dir(test_path)
-    #     else:
-    #         raise ValueError("Invalid value for test parameter ")
-    #
-    #     for test_file in test_files:
-    #
-    #         img = io.imread(test_file)
-    #
-    #         start_time = datetime.datetime.now()
-    #
-    #         mask = unet.predict(img)
-    #
-    #         end_time = datetime.datetime.now()
-    #         time_taken = (end_time - start_time).total_seconds()
-    #
-    #         LOGGER.info("Prediction on %s took %s seconds.",
-    #                     test_file, str(time_taken))
-    #
-    #         # TODO: Change this to save predictions in the same folder.
-    #         if os.path.isdir(prediction):
-    #             io.imsave(
-    #                 os.path.join(prediction, os.path.basename(test_file)),
-    #                 mask)
-    #         else:
-    #             io.imsave(prediction, mask)
+                # Convert to torch.Tensor.
+                image = torch.tensor(image, device=device).float()
+                image = image.unsqueeze(0)
+
+                start_time = datetime.datetime.now()
+
+                prediction = unet(image)
+
+                # Threshold the prediction to generate mask.
+                mask = generate_mask(prediction, 0.5)
+
+                end_time = datetime.datetime.now()
+                time_taken = (end_time - start_time).total_seconds()
+                LOGGER.info("Prediction on %s took %s seconds.",
+                            test_file, str(time_taken))
+
+                mask = mask.detach().squeeze(0).cpu().numpy()
+
+                # Swap back the axes for NumPy.
+                mask = np.transpose(mask, (1, 2, 0))
+                mask *= 255
+                mask = transform.resize(mask, (image_height, image_width),
+                                        preserve_range=True)
+                mask = mask.astype(np.uint8)
+
+                # Save to a file.
+                root, ext = os.path.splitext(test_file)
+                io.imsave(root + "-pred" + ext, mask)

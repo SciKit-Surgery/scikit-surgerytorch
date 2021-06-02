@@ -35,7 +35,7 @@ def main(args=None):
     parser.add_argument("-m", "--model_path",
                         required=False,
                         type=str,
-                        help="Path to pre-trained model (normally .hdf5) "
+                        help="Path to pre-trained model (normally .pt) "
                              "to load.")
 
     parser.add_argument("-md", "--mode",
@@ -46,7 +46,7 @@ def main(args=None):
     parser.add_argument("-s", "--save_path",
                         required=False,
                         type=str,
-                        help="Path to save trained model (normally .hdf5) to.")
+                        help="Path to save trained model (normally .pt) to.")
 
     parser.add_argument("-t", "--test_path",
                         required=False,
@@ -56,7 +56,7 @@ def main(args=None):
     parser.add_argument("-e", "--epochs",
                         required=False,
                         type=int,
-                        default=50,
+                        default=5,
                         help="Number of epochs.")
 
     parser.add_argument("-b", "--batch_size",
@@ -69,13 +69,7 @@ def main(args=None):
                         required=False,
                         type=float,
                         default=0.0001,
-                        help="Learning rate for optimizer (Adam).")
-
-    parser.add_argument("-pat", "--patience",
-                        required=False,
-                        type=int,
-                        default=5,
-                        help="Patience (early stopping tolerance, #steps.)")
+                        help="Learning rate for optimiser (Adam).")
 
     version_string = __version__
     friendly_version_string = version_string if version_string else 'unknown'
@@ -95,5 +89,4 @@ def main(args=None):
              args.test_path,
              args.epochs,
              args.batch_size,
-             args.learning_rate,
-             args.patience)
+             args.learning_rate)
