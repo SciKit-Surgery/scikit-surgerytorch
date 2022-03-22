@@ -4,6 +4,8 @@
 Module to implement Hierarchical Deep Stereo Matching on High Resolution Images
 network.
 """
+# pylint:disable=invalid-name, line-too-long, no-else-return
+# pylint:disable=useless-object-inheritance, consider-using-from-import
 
 import logging
 import time
@@ -20,9 +22,6 @@ from sksurgerytorch.models.high_res_stereo_model import disparityregression
 from sksurgerytorch.models.high_res_stereo_model import HSMNet_model
 
 LOGGER = logging.getLogger(__name__)
-
-# pylint:disable=invalid-name, line-too-long, no-else-return
-# pylint:disable=useless-object-inheritance
 
 
 class HSMNet:
