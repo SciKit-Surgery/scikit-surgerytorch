@@ -8,7 +8,18 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, macos-latest, windows-latest]
-        python-ver: [3.7, 3.8, 3.9]
+        python-ver: [3.7, 3.8]
+        experimental: [false]
+        include:
+          - python-ver: 3.9
+            os: ubuntu-18.04
+            experimental: true
+          - python-ver: 3.9
+            os: windows-latest
+            experimental: true
+          - python-ver: 3.9
+            os: macos-latest
+            experimental: true
 
     runs-on: ${{ matrix.os }}
 
