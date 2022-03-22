@@ -2,9 +2,10 @@
 # It is used by pip to manage software dependencies. It is not to be
 # confused with the software requirements, which are listed in
 # doc/requirements.rst
-numpy
+six>=1.10
+numpy>=1.11
 ipykernel
 nbsphinx
-torch==1.6.0 
+torch==1.6.0
 torchvision==0.7.0
-opencv-contrib-python
+opencv-contrib-python-headless>=4.2.0.32

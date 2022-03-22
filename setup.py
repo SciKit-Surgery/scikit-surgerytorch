@@ -55,7 +55,7 @@ setup(
         'numpy>=1.11',
         'torch==1.6.0',
         'torchvision==0.7.0',
-        'opencv-contrib-python'
+        'opencv-contrib-python-headless>=4.2.0.32'
     ],
 
     entry_points={
