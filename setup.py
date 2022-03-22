@@ -53,8 +53,8 @@ setup(
     install_requires=[
         'six>=1.10',
         'numpy>=1.11',
-        'torch==1.6.0',
-        'torchvision==0.7.0',
+        'torch',
+        'torchvision',
         'opencv-contrib-python-headless>=4.2.0.32'
     ],
 
