@@ -6,6 +6,7 @@ network.
 """
 # pylint:disable=invalid-name, line-too-long, no-else-return
 # pylint:disable=useless-object-inheritance, consider-using-from-import
+# pylint:disable=consider-using-f-string
 
 import logging
 import time

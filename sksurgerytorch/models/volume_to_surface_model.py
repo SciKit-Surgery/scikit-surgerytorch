@@ -1,18 +1,18 @@
 
 """ Model implemetnation for V2SNet"""
-import time
-import torchvision
-import numpy
-import torch
-import torch.nn as nn
-
-
 # pylint:disable=invalid-name, missing-function-docstring
 # pylint:disable=missing-class-docstring, redefined-outer-name
 # pylint:disable=unused-variable, super-with-arguments, line-too-long
 # pylint:disable=attribute-defined-outside-init, too-many-instance-attributes
 # pylint:disable=access-member-before-definition, abstract-method
 # pylint:disable=consider-using-from-import,consider-using-f-string
+
+
+import time
+import torchvision
+import numpy
+import torch
+import torch.nn as nn
 
 
 class ConstPaddedConv(nn.Module):
