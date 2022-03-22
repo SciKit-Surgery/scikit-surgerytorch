@@ -1,6 +1,11 @@
 """
 Definition of the HSMNet model structure, and various helper functions.
 """
+# pylint:disable=invalid-name, line-too-long, missing-docstring, too-many-locals
+# pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
+# pylint:disable=super-with-arguments, abstract-method,
+# pylint:disable=consider-using-from-import
+
 
 from __future__ import print_function
 import math
@@ -11,9 +16,6 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import numpy as np
 
-# pylint:disable=invalid-name, line-too-long, missing-docstring, too-many-locals
-# pylint:disable=too-many-instance-attributes, no-else-return, no-self-use
-# pylint:disable=super-with-arguments, abstract-method
 
 class HSMNet_model(nn.Module):
     def __init__(self, maxdisp, clean, device, level=1):
